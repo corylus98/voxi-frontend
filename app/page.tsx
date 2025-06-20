@@ -165,7 +165,7 @@ export default function Home() {
     try {
       // If it's a predefined question, use the specific endpoint
       if (endpoint) {
-        const response = await fetch(`http://100.74.230.10:8080/${endpoint}`, {
+        const response = await fetch(`/api/${endpoint}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -181,7 +181,7 @@ export default function Home() {
         return data;
       } else {
         // For custom questions, use the auto_route endpoint
-        const response = await fetch(`http://100.74.230.10:8080/auto_route`, {
+        const response = await fetch(`/api/auto_route`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
