@@ -128,6 +128,19 @@ export default function Home() {
     'What are the peak call hours throughout the day?'
   ];
 
+  // ===== NEW: Chinese translations for display =====
+  const chineseTranslations = {
+    'What topics usually lead to longer call durations?': '哪些话题通常导致更长的通话时间？',
+    'What are the most common call topics?': '最常见的通话话题是什么？',
+    'What is the sentiment distribution by topic?': '按话题划分的情感分布如何？',
+    'What topics are growing in popularity this month?': '本月哪些话题越来越受欢迎？',
+    'What are the peak call hours throughout the day?': '一天中的通话高峰时段是什么时候？'
+  };
+  
+  const getChineseTranslation = (question: string): string => {
+    return chineseTranslations[question as PredefinedQuestion] || question;
+  };
+
   // Colors for charts
   const chartColors = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#6366F1', '#14B8A6', '#F97316', '#EC4899', '#84CC16'];
   const sentimentColors = {
@@ -165,7 +178,8 @@ export default function Home() {
     try {
       // If it's a predefined question, use the specific endpoint
       if (endpoint) {
-        const response = await fetch(`http://100.74.230.10:8080/${endpoint}`, {
+        // const response = await fetch(`http://100.74.230.10:8080/${endpoint}`, {
+        const response = await fetch(`http://198.18.0.1:8080/${endpoint}`, {  
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -181,7 +195,8 @@ export default function Home() {
         return data;
       } else {
         // For custom questions, use the auto_route endpoint
-        const response = await fetch(`http://100.74.230.10:8080/auto_route`, {
+        // const response = await fetch(`http://100.74.230.10:8080/auto_route`, {
+        const response = await fetch(`http://198.18.0.1:8080/auto_route`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -259,7 +274,8 @@ export default function Home() {
   // Visualization Components
   const TopicDurationChart = ({ data }: { data: TopicDurationData[] }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Average Call Duration by Topic</h2>
+      {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Average Call Duration by Topic</h2> */}
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">各话题平均通话时长</h2>
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -271,13 +287,14 @@ export default function Home() {
               height={80}
               interval={0}
             />
-            <YAxis label={{ value: 'Duration (seconds)', angle: -90, position: 'insideLeft' }} />
+            {/* <YAxis label={{ value: 'Duration (seconds)', angle: -90, position: 'insideLeft' }} /> */}
+            <YAxis label={{ value: '时长（秒）', angle: -90, position: 'insideLeft' }} />
             <Tooltip 
               formatter={(value, name) => [
                 typeof value === 'number' ? `${value.toFixed(1)}s` : `${value}s`, 
-                'Avg Duration'
+                '平均时长'
               ]}
-              labelFormatter={(label) => `Topic: ${label}`}
+              labelFormatter={(label) => `话题: ${label}`}
             />
             <Bar dataKey="avg_duration" fill="#3B82F6" />
           </BarChart>
@@ -288,7 +305,8 @@ export default function Home() {
 
   const TopicCountChart = ({ data }: { data: TopicCountData[] }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Call Count by Topic</h2>
+      {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Call Count by Topic</h2> */}
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">各话题通话次数</h2>
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -300,10 +318,10 @@ export default function Home() {
               height={80}
               interval={0}
             />
-            <YAxis label={{ value: 'Call Count', angle: -90, position: 'insideLeft' }} />
+            <YAxis label={{ value: '通话次数', angle: -90, position: 'insideLeft' }} />
             <Tooltip 
-              formatter={(value, name) => [value, 'Call Count']}
-              labelFormatter={(label) => `Topic: ${label}`}
+              formatter={(value, name) => [value, '通话次数']}
+              labelFormatter={(label) => `话题: ${label}`}
             />
             <Bar dataKey="count" fill="#8B5CF6" />
           </BarChart>
@@ -331,7 +349,8 @@ export default function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pie Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Overall Sentiment Distribution</h2>
+          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Overall Sentiment Distribution</h2> */}
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">整体情绪分布</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -355,7 +374,8 @@ export default function Home() {
 
         {/* Negative Ratio Bar Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Negative Sentiment Ratio by Topic</h2>
+          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Negative Sentiment Ratio by Topic</h2> */}
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">各话题负面情绪占比</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -368,16 +388,16 @@ export default function Home() {
                   interval={0}
                 />
                 <YAxis 
-                  label={{ value: 'Negative Ratio', angle: -90, position: 'insideLeft' }}
+                  label={{ value: '占比', angle: -90, position: 'insideLeft' }}
                   domain={[0, 1]}
                   tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
                 />
                 <Tooltip 
                   formatter={(value) => [
                     typeof value === 'number' ? `${(value * 100).toFixed(1)}%` : `${value}%`, 
-                    'Negative Ratio'
+                    '负面情绪占比'
                   ]}
-                  labelFormatter={(label) => `Topic: ${label}`}
+                  labelFormatter={(label) => `话题: ${label}`}
                 />
                 <Bar dataKey="negative_ratio" fill="#EF4444" />
               </BarChart>
@@ -419,30 +439,31 @@ export default function Home() {
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Peak Hour</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">尖峰时刻</h3>
             <p className="text-2xl font-bold text-blue-600">{data.peak_hour?.hour_display}</p>
-            <p className="text-sm text-gray-600">{data.peak_hour?.call_count} calls ({data.peak_hour?.percentage}%)</p>
+            {/* <p className="text-sm text-gray-600">{data.peak_hour?.call_count} calls ({data.peak_hour?.percentage}%)</p> */}
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Total Calls</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">总通话数</h3>
             <p className="text-2xl font-bold text-gray-800">{data.statistics.total_calls.toLocaleString()}</p>
             <p className="text-sm text-gray-600">{data.statistics.date_range}</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Active Hours</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">每日活跃通话时间范围</h3>
             <p className="text-2xl font-bold text-green-600">{data.statistics.total_active_hours}</p>
-            <p className="text-sm text-gray-600">out of 24 hours</p>
+            {/* <p className="text-sm text-gray-600">out of 24 hours</p> */}
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Avg/Hour</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">平均每小时通话数</h3>
             <p className="text-2xl font-bold text-purple-600">{data.statistics.average_calls_per_hour}</p>
-            <p className="text-sm text-gray-600">calls per hour</p>
+            {/* <p className="text-sm text-gray-600">calls per hour</p> */}
           </div>
         </div>
 
         {/* 24-Hour Timeline Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">24-Hour Call Distribution</h2>
+          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">24-Hour Call Distribution</h2> */}
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">通话量分布</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={completeHourlyData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
@@ -451,10 +472,10 @@ export default function Home() {
                   dataKey="hour_label"
                   interval={1}
                 />
-                <YAxis label={{ value: 'Call Count', angle: -90, position: 'insideLeft' }} />
+                <YAxis label={{ value: '通话数', angle: -90, position: 'insideLeft' }} />
                 <Tooltip 
-                  formatter={(value) => [value, 'Calls']}
-                  labelFormatter={(label) => `Hour: ${label}`}
+                  formatter={(value) => [value, '通话数']}
+                  labelFormatter={(label) => `时段: ${label}`}
                 />
                 <Line 
                   type="monotone" 
@@ -470,7 +491,8 @@ export default function Home() {
 
         {/* Top Peak Hours Bar Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Top 10 Busiest Hours</h2>
+          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Top 10 Busiest Hours</h2> */}
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">通话高峰时段</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topPeakHours} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -482,10 +504,10 @@ export default function Home() {
                   height={80}
                   interval={0}
                 />
-                <YAxis label={{ value: 'Call Count', angle: -90, position: 'insideLeft' }} />
+                <YAxis label={{ value: '通话数', angle: -90, position: 'insideLeft' }} />
                 <Tooltip 
-                  formatter={(value) => [value, 'Calls']}
-                  labelFormatter={(label) => `Time: ${label}`}
+                  formatter={(value) => [value, '通话数']}
+                  labelFormatter={(label) => `时段: ${label}`}
                 />
                 <Bar dataKey="call_count" fill="#8B5CF6" />
               </BarChart>
@@ -495,7 +517,8 @@ export default function Home() {
 
         {/* Percentage Distribution Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Call Distribution by Percentage</h2>
+          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Call Distribution by Percentage</h2> */}
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">通话分布</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={completeHourlyData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -505,12 +528,12 @@ export default function Home() {
                   interval={1}
                 />
                 <YAxis 
-                  label={{ value: 'Percentage (%)', angle: -90, position: 'insideLeft' }}
+                  label={{ value: '比例', angle: -90, position: 'insideLeft' }}
                   tickFormatter={(value) => `${value}%`}
                 />
                 <Tooltip 
-                  formatter={(value) => [`${value}%`, 'Percentage']}
-                  labelFormatter={(label) => `Hour: ${label}`}
+                  formatter={(value) => [`${value}%`, '比例']}
+                  labelFormatter={(label) => `时段: ${label}`}
                 />
                 <Bar dataKey="percentage" fill="#10B981" />
               </BarChart>
@@ -528,7 +551,7 @@ export default function Home() {
     const growthData = data.growing_topics.map(topic => ({
       ...topic,
       growth_ratio_numeric: topic.growth_ratio === 'new' ? 10 : topic.growth_ratio,
-      growth_display: topic.growth_ratio === 'new' ? 'New Topic' : `${topic.growth_ratio}x`
+      growth_display: topic.growth_ratio === 'new' ? '新话题' : `${topic.growth_ratio}x`
     }));
 
     // Prepare monthly trend data for line chart
@@ -550,25 +573,26 @@ export default function Home() {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Current Month</h3>
+            {/* <h3 className="text-sm font-medium text-gray-500 mb-2">Current Month</h3> */}
+            <h3 className="text-sm font-medium text-gray-500 mb-2">当前月份</h3>
             <p className="text-2xl font-bold text-gray-800">{data.current_month}</p>
-            <p className="text-sm text-gray-600">{data.current_month_calls} calls</p>
+            {/* <p className="text-sm text-gray-600">{data.current_month_calls} calls</p> */}
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Historical Months</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">历史记录分析月份数</h3>
             <p className="text-2xl font-bold text-gray-800">{data.historical_months}</p>
-            <p className="text-sm text-gray-600">months analyzed</p>
+            {/* <p className="text-sm text-gray-600">months analyzed</p> */}
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">Growing Topics</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">快速增长话题数</h3>
             <p className="text-2xl font-bold text-green-600">{data.growing_topics.length}</p>
-            <p className="text-sm text-gray-600">topics trending up</p>
+            {/* <p className="text-sm text-gray-600">topics trending up</p> */}
           </div>
         </div>
 
         {/* Growth Ratio Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Topic Growth Ratios</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">话题增长率</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={growthData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -581,15 +605,15 @@ export default function Home() {
                   interval={0}
                 />
                 <YAxis 
-                  label={{ value: 'Growth Ratio', angle: -90, position: 'insideLeft' }}
+                  label={{ value: '增长率', angle: -90, position: 'insideLeft' }}
                   domain={[0, 'dataMax']}
                 />
                 <Tooltip 
                 formatter={(value) => [
                   growthData.find(item => item.growth_ratio_numeric === value)?.growth_display || value,
-                  'Growth Ratio'
+                  '增长率'
                 ]}
-                labelFormatter={(label) => `Topic: ${label}`}
+                labelFormatter={(label) => `话题: ${label}`}
               />
                 <Bar dataKey="growth_ratio_numeric" fill="#10B981" />
               </BarChart>
@@ -599,7 +623,7 @@ export default function Home() {
 
         {/* Monthly Trends Line Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Monthly Topic Frequency Trends</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">每月话题增长趋势</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -611,7 +635,7 @@ export default function Home() {
                   height={80}
                 />
                 <YAxis 
-                  label={{ value: 'Frequency', angle: -90, position: 'insideLeft' }}
+                  label={{ value: '频率', angle: -90, position: 'insideLeft' }}
                   tickFormatter={(value) => `${(value * 100).toFixed(1)}%`}
                 />
                 <Tooltip 
@@ -643,7 +667,7 @@ export default function Home() {
 
   const DataTable = ({ data, columns }: { data: any[], columns: TableColumn[] }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">Detailed Data</h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">详细资料</h2>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -682,9 +706,9 @@ export default function Home() {
     // Check if this is peak call hours data
     if (responseData.peak_hour) {
       const columns: TableColumn[] = [
-        { key: 'hour_range', title: 'Time Range' },
-        { key: 'call_count', title: 'Call Count' },
-        { key: 'percentage', title: 'Percentage', render: (value: any) => `${value}%` }
+        { key: 'hour_range', title: '时间范围' },
+        { key: 'call_count', title: '通话数量' },
+        { key: 'percentage', title: '比例', render: (value: any) => `${value}%` }
       ];
       return (
         <div className="space-y-6">
@@ -697,26 +721,26 @@ export default function Home() {
     // Check if this is growing topics data
     if (responseData && responseData.growing_topics && responseData.monthly_topic_trends) {
       const columns: TableColumn[] = [
-        { key: 'topic', title: 'Topic' },
+        { key: 'topic', title: '话题' },
         { 
           key: 'current_frequency', 
-          title: 'Current Freq', 
+          title: '当前频率', 
           render: (value: any) => typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : `${value}%`
         },
-        { key: 'current_count', title: 'Current Count' },
+        { key: 'current_count', title: '当前数量' },
         { 
           key: 'historical_avg_frequency', 
-          title: 'Historical Avg', 
+          title: '历史平均频率', 
           render: (value: any) => typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : `${value}%`
         },
         { 
           key: 'growth_ratio', 
-          title: 'Growth Ratio', 
-          render: (value: any) => value === 'new' ? 'New Topic' : `${value}x` 
+          title: '增长率', 
+          render: (value: any) => value === 'new' ? '新话题' : `${value}x` 
         },
         { 
           key: 'is_growing', 
-          title: 'Growing', 
+          title: '是否增长', 
           render: (value: any) => value ? '✅' : '❌' 
         }
       ];
@@ -735,13 +759,13 @@ export default function Home() {
       if ('avg_duration' in firstItem) {
         // Topic duration insight
         const columns: TableColumn[] = [
-          { key: 'topic', title: 'Topic' },
+          { key: 'topic', title: '话题' },
           { 
             key: 'avg_duration', 
-            title: 'Avg Duration (s)', 
+            title: '平均时长（秒）', 
             render: (value: any) => typeof value === 'number' ? value.toFixed(1) : value 
           },
-          { key: 'count', title: 'Call Count' }
+          { key: 'count', title: '通话数量' }
         ];
         return (
           <div className="space-y-6">
@@ -752,14 +776,14 @@ export default function Home() {
       } else if ('positive' in firstItem) {
         // Sentiment distribution
         const columns: TableColumn[] = [
-          { key: 'topic', title: 'Topic' },
-          { key: 'positive', title: 'Positive' },
-          { key: 'neutral', title: 'Neutral' },
-          { key: 'negative', title: 'Negative' },
-          { key: 'total', title: 'Total' },
+          { key: 'topic', title: '话题' },
+          { key: 'positive', title: '正面' },
+          { key: 'neutral', title: '中性' },
+          { key: 'negative', title: '负面' },
+          { key: 'total', title: '总计' },
           { 
             key: 'negative_ratio', 
-            title: 'Negative Ratio', 
+            title: '负面情绪占比', 
             render: (value: any) => typeof value === 'number' ? `${(value * 100).toFixed(1)}%` : `${value}%`
           }
         ];
@@ -772,8 +796,8 @@ export default function Home() {
       } else if ('count' in firstItem) {
         // Topic count
         const columns: TableColumn[] = [
-          { key: 'topic', title: 'Topic' },
-          { key: 'count', title: 'Call Count' }
+          { key: 'topic', title: '话题' },
+          { key: 'count', title: '通话数量' }
         ];
         return (
           <div className="space-y-6">
@@ -807,8 +831,9 @@ export default function Home() {
               <span className="text-white font-bold text-lg">V</span>
             </button>
             <div>
-              <h1 className="text-xl font-semibold text-gray-800">{currentQuestion}</h1>
-              <p className="text-sm text-gray-500">Analyzing your customer service data...</p>
+              <h1 className="text-xl font-semibold text-gray-800">{getChineseTranslation(currentQuestion)}</h1>
+              {/* <p className="text-sm text-gray-500">Analyzing your customer service data...</p> */}
+              <p className="text-sm text-gray-500">正在分析您的客服数据</p>
             </div>
           </div>
         </header>
@@ -819,7 +844,8 @@ export default function Home() {
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-4 text-lg text-gray-600">Analyzing data...</span>
+                {/* <span className="ml-4 text-lg text-gray-600">Analyzing data...</span> */}
+                <span className="ml-4 text-lg text-gray-600">分析中</span>
               </div>
             ) : (
               <>
@@ -845,7 +871,8 @@ export default function Home() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask another question..."
+            // placeholder="Ask another question..."
+            placeholder="我还能帮您什么？"
             className="w-full px-6 py-3 pr-16 bg-gray-50 rounded-2xl border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-0 placeholder-gray-400"
             onKeyDown={handleKeyDown}
           />
@@ -876,10 +903,12 @@ export default function Home() {
 
       {/* Title */}
       <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 text-center">
-        What would you like to know?
+        {/* What would you like to know? */}
+        想了解什么呢？
       </h1>
       <p className="text-lg text-gray-600 max-w-2xl mx-auto text-center mb-8">
-        Ask me anything about your customer service call data and get instant insights
+        {/* Ask me anything about your customer service call data and get instant insights */}
+        欢迎向我提问任何关于客户服务通话数据的问题，立即获取洞察分析
       </p>
 
       {/* Search Input */}
@@ -888,7 +917,8 @@ export default function Home() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ask Voxi..."
+          // placeholder="Ask Voxi..."
+          placeholder="问问 Voxi..."
           className="w-full px-6 py-4 pr-16 text-lg bg-white rounded-2xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300 focus:outline-none focus:ring-0 placeholder-gray-400"
           onKeyDown={handleKeyDown}
         />
@@ -906,7 +936,8 @@ export default function Home() {
       {/* Predefined Questions */}
       <div className="w-full max-w-4xl mx-auto text-center">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
-          Try asking these questions:
+          {/* Try asking these questions: */}
+          大家常问的问题
         </h2>
         <div className="flex flex-wrap gap-3 justify-center">
           {predefinedQuestions.map((question, index) => (
@@ -915,7 +946,7 @@ export default function Home() {
               onClick={() => handleChipClick(question)}
               className="bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 border border-gray-200 hover:border-blue-300 rounded-xl px-4 py-3 text-sm text-gray-700 hover:text-blue-700 transition-all duration-200 hover:shadow-md hover:scale-105 whitespace-nowrap font-medium"
             >
-              {question}
+              {chineseTranslations[question]}
             </button>
           ))}
         </div>
