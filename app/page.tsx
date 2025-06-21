@@ -866,25 +866,40 @@ export default function Home() {
 
         {/* Fixed Bottom Input */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
-          <div className="max-w-4xl mx-auto relative">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            // placeholder="Ask another question..."
-            placeholder="我还能帮您什么？"
-            className="w-full px-6 py-3 pr-16 bg-gray-50 rounded-2xl border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-0 placeholder-gray-400"
-            onKeyDown={handleKeyDown}
-          />
-            <button
-              onClick={() => handleSubmit(query)}
-              disabled={!query.trim()}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
-            >
-              <svg className="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-            </button>
+          <div className="max-w-4xl mx-auto">
+          <div className="relative mb-4">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              // placeholder="Ask another question..."
+              placeholder="我还能帮您什么？"
+              className="w-full px-6 py-3 pr-16 bg-gray-50 rounded-2xl border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-0 placeholder-gray-400"
+              onKeyDown={handleKeyDown}
+            />
+              <button
+                onClick={() => handleSubmit(query)}
+                disabled={!query.trim()}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 hover:scale-105"
+              >
+                <svg className="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Predefined Questions */}
+          <div className="flex flex-wrap gap-2 justify-center">
+            {predefinedQuestions.map((question, index) => (
+              <button
+                key={index}
+                onClick={() => handleChipClick(question)}
+                className="bg-gray-50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 border border-gray-200 hover:border-blue-300 rounded-lg px-3 py-2 text-xs text-gray-600 hover:text-blue-700 transition-all duration-200 hover:shadow-sm whitespace-nowrap font-medium"
+              >
+                {chineseTranslations[question]}
+              </button>
+            ))}
           </div>
         </div>
       </div>
