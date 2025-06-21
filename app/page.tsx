@@ -179,7 +179,7 @@ export default function Home() {
       // If it's a predefined question, use the specific endpoint
       if (endpoint) {
         // const response = await fetch(`http://100.74.230.10:8080/${endpoint}`, {
-        const response = await fetch(`http://198.18.0.1:8080/${endpoint}`, {  
+        const response = await fetch(`http://192.168.22.144:8080/${endpoint}`, {  
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -196,7 +196,7 @@ export default function Home() {
       } else {
         // For custom questions, use the auto_route endpoint
         // const response = await fetch(`http://100.74.230.10:8080/auto_route`, {
-        const response = await fetch(`http://198.18.0.1:8080/auto_route`, {
+        const response = await fetch(`http://192.168.22.144:8080/auto_route`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
