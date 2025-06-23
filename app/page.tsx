@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
+import { useTranslation } from 'react-i18next';
+import './i18n';
 
 // Type definitions
 interface TopicDurationData {
@@ -96,50 +98,45 @@ interface ChartDataWithGrowth extends GrowingTopicData {
 
 
 export default function Home() {
+  const { t, i18n} = useTranslation();
   const [query, setQuery] = useState<string>('');
   const [currentQuestion, setCurrentQuestion] = useState<string>('');
+  const [currentQuestionKey, setCurrentQuestionKey] = useState<string>('');
   const [showResponse, setShowResponse] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [responseData, setResponseData] = useState<ApiResponse | null>(null);
   const [error, setError] = useState<string>('');
+
+  // Language switcher (inline)
+  const changeLanguage = (lng: string) => {
+    i18n.changeLanguage(lng);
+  };
   
   type PredefinedQuestion = 
-  | 'What topics usually lead to longer call durations?'
-  | 'What are the most common call topics?'
-  | 'What is the sentiment distribution by topic?'
-  | 'What topics are growing in popularity this month?'
-  | 'What are the peak call hours throughout the day?';
+  | 'duration'
+  | 'common'
+  | 'sentiment'
+  | 'growing'
+  | 'peakHours';
 
   // API endpoints mapping
-  const apiEndpoints: Record<PredefinedQuestion, string> = {
-    'What topics usually lead to longer call durations?': 'topic_duration_insight_local',
-    'What are the most common call topics?': 'processed_topic_count_local',
-    'What is the sentiment distribution by topic?': 'processed_topic_sentiment_distribution_local',
-    'What topics are growing in popularity this month?': 'growing_topics_local',
-    'What are the peak call hours throughout the day?': 'peak_call_hours_local'
+  const apiEndpoints: Record<string, string> = {
+    [t('questions.duration')]: 'topic_duration_insight_local',
+    [t('questions.common')]: 'processed_topic_count_local',
+    [t('questions.sentiment')]: 'processed_topic_sentiment_distribution_local',
+    [t('questions.growing')]: 'growing_topics_local',
+    [t('questions.peakHours')]: 'peak_call_hours_local'
   };
   
   // Predefined questions 
-  const predefinedQuestions: PredefinedQuestion[] = [
-    'What topics usually lead to longer call durations?',
-    'What are the most common call topics?',
-    'What is the sentiment distribution by topic?',
-    'What topics are growing in popularity this month?',
-    'What are the peak call hours throughout the day?'
-  ];
+  const predefinedQuestions = [
+    { key: 'duration', endpoint: 'topic_duration_insight_local' },
+    { key: 'common', endpoint: 'processed_topic_count_local' },
+    { key: 'sentiment', endpoint: 'processed_topic_sentiment_distribution_local' },
+    { key: 'growing', endpoint: 'growing_topics_local' },
+    { key: 'peakHours', endpoint: 'peak_call_hours_local' }
+  ] as const;
 
-  // ===== NEW: Chinese translations for display =====
-  const chineseTranslations = {
-    'What topics usually lead to longer call durations?': '哪些话题通常导致更长的通话时间？',
-    'What are the most common call topics?': '最常见的通话话题是什么？',
-    'What is the sentiment distribution by topic?': '按话题划分的情感分布如何？',
-    'What topics are growing in popularity this month?': '本月哪些话题越来越受欢迎？',
-    'What are the peak call hours throughout the day?': '一天中的通话高峰时段是什么时候？'
-  };
-  
-  const getChineseTranslation = (question: string): string => {
-    return chineseTranslations[question as PredefinedQuestion] || question;
-  };
 
   // Colors for charts
   const chartColors = ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444', '#6366F1', '#14B8A6', '#F97316', '#EC4899', '#84CC16'];
@@ -172,14 +169,15 @@ export default function Home() {
   };
 
   // API call function
-  const fetchInsight = async (question: string) => {
-    const endpoint = question in apiEndpoints ? apiEndpoints[question as PredefinedQuestion] : undefined;
+  const fetchInsight = async (question: string, endpoint?: string) => {
     
     try {
       // If it's a predefined question, use the specific endpoint
       if (endpoint) {
-        // const response = await fetch(`http://100.74.230.10:8080/${endpoint}`, {
-        const response = await fetch(`http://192.168.22.144:8080/${endpoint}`, {  
+        // With Tailscale
+        const response = await fetch(`http://100.74.230.10:8080/${endpoint}`, {
+        // On server
+        // const response = await fetch(`http://192.168.22.144:8080/${endpoint}`, {  
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -195,8 +193,10 @@ export default function Home() {
         return data;
       } else {
         // For custom questions, use the auto_route endpoint
-        // const response = await fetch(`http://100.74.230.10:8080/auto_route`, {
-        const response = await fetch(`http://192.168.22.144:8080/auto_route`, {
+        // With Tailscale
+        const response = await fetch(`http://100.74.230.10:8080/auto_route`, {
+        // On server
+        // const response = await fetch(`http://192.168.22.144:8080/auto_route`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -219,9 +219,10 @@ export default function Home() {
     }
   };
 
-  const handleSubmit = async (question: string) => {
+  const handleSubmit = async (question: string, questionKey?: string, endpoint?: string) => {
     if (question.trim()) {
       setCurrentQuestion(question);
+      setCurrentQuestionKey(questionKey || '');
       setIsLoading(true);
       setShowResponse(true);
       setError('null');
@@ -229,7 +230,7 @@ export default function Home() {
       // alert(`Question sent: "${question}"`);
 
       try {
-        const data = await fetchInsight(question);
+        const data = await fetchInsight(question, endpoint);
         setResponseData(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
@@ -238,7 +239,6 @@ export default function Home() {
         setIsLoading(false);
       }
 
-
       setQuery('');
     }
   };
@@ -246,12 +246,14 @@ export default function Home() {
   const handleInputSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (query.trim()) {
+      // For manual input, no predefined endpoint or key
       handleSubmit(query);
     }
   };
 
-  const handleChipClick = (question: string) => {
-    handleSubmit(question);
+  const handleChipClick = (questionKey: string, endpoint: string) => {
+    const translatedQuestion = t(`questions.${questionKey}`);
+    handleSubmit(translatedQuestion, questionKey, endpoint);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -266,16 +268,42 @@ export default function Home() {
   const resetHome = () => {
     setShowResponse(false);
     setCurrentQuestion('');
+    setCurrentQuestionKey('');
     setQuery('');
     setResponseData(null);
     setError('null');
   };
 
+  // Simple language switcher
+  const LanguageSwitcher = () => {
+    const languages = [
+      {code: 'en', name: 'English'},
+      {code: 'zh_tra', name: '繁體中文'},
+      {code: 'zh_sim', name: '简体中文'}
+    ];
+
+    return (
+      <div className="fixed top-4 right-4 z-50">
+        <select
+          value={i18n.language}
+          onChange={(e) => i18n.changeLanguage(e.target.value)}
+          className="bg-white border border-gray-200 rounded-lg px-4 py-2 text-sm shadow-sm hover:shadow-md transition-all"
+        >
+          {languages.map((lang) => (
+            <option key={lang.code} value={lang.code}>
+              {lang.name}
+            </option>
+          ))}
+        </select>
+      </div>
+    );
+  };
+
+
   // Visualization Components
   const TopicDurationChart = ({ data }: { data: TopicDurationData[] }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Average Call Duration by Topic</h2> */}
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">各话题平均通话时长</h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('charts.avgDuration')}</h2>
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -287,14 +315,13 @@ export default function Home() {
               height={80}
               interval={0}
             />
-            {/* <YAxis label={{ value: 'Duration (seconds)', angle: -90, position: 'insideLeft' }} /> */}
-            <YAxis label={{ value: '时长（秒）', angle: -90, position: 'insideLeft' }} />
+            <YAxis label={{ value: t('labels.duration'), angle: -90, position: 'insideLeft' }} />
             <Tooltip 
               formatter={(value, name) => [
                 typeof value === 'number' ? `${value.toFixed(1)}s` : `${value}s`, 
-                '平均时长'
+                t('labels.avgDuration')
               ]}
-              labelFormatter={(label) => `话题: ${label}`}
+              labelFormatter={(label) => `${t('labels.topic')}: ${label}`}
             />
             <Bar dataKey="avg_duration" fill="#3B82F6" />
           </BarChart>
@@ -305,8 +332,7 @@ export default function Home() {
 
   const TopicCountChart = ({ data }: { data: TopicCountData[] }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Call Count by Topic</h2> */}
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">各话题通话次数</h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('charts.callCount')}</h2>
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -318,10 +344,10 @@ export default function Home() {
               height={80}
               interval={0}
             />
-            <YAxis label={{ value: '通话次数', angle: -90, position: 'insideLeft' }} />
+            <YAxis label={{ value: t('labels.callCount'), angle: -90, position: 'insideLeft' }} />
             <Tooltip 
-              formatter={(value, name) => [value, '通话次数']}
-              labelFormatter={(label) => `话题: ${label}`}
+              formatter={(value, name) => [value, t('labels.callCount')]}
+              labelFormatter={(label) => `${t('labels.topic')}: ${label}`}
             />
             <Bar dataKey="count" fill="#8B5CF6" />
           </BarChart>
@@ -340,17 +366,16 @@ export default function Home() {
     }, { positive: 0, neutral: 0, negative: 0 });
 
     const pieData = [
-      { name: 'Positive', value: overallSentiment.positive, color: sentimentColors.positive },
-      { name: 'Neutral', value: overallSentiment.neutral, color: sentimentColors.neutral },
-      { name: 'Negative', value: overallSentiment.negative, color: sentimentColors.negative }
+      { name: t('labels.positive'), value: overallSentiment.positive, color: sentimentColors.positive },
+      { name: t('labels.neutral'), value: overallSentiment.neutral, color: sentimentColors.neutral },
+      { name: t('labels.negative'), value: overallSentiment.negative, color: sentimentColors.negative }
     ];
 
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Pie Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Overall Sentiment Distribution</h2> */}
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">整体情绪分布</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('charts.sentiment')}</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -374,8 +399,7 @@ export default function Home() {
 
         {/* Negative Ratio Bar Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Negative Sentiment Ratio by Topic</h2> */}
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">各话题负面情绪占比</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('charts.negativeRatio')}</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -388,16 +412,16 @@ export default function Home() {
                   interval={0}
                 />
                 <YAxis 
-                  label={{ value: '占比', angle: -90, position: 'insideLeft' }}
+                  label={{ value: t('labels.negativeRatio'), angle: -90, position: 'insideLeft' }}
                   domain={[0, 1]}
                   tickFormatter={(value) => `${(value * 100).toFixed(0)}%`}
                 />
                 <Tooltip 
                   formatter={(value) => [
                     typeof value === 'number' ? `${(value * 100).toFixed(1)}%` : `${value}%`, 
-                    '负面情绪占比'
+                    t('labels.negativeRatio')
                   ]}
-                  labelFormatter={(label) => `话题: ${label}`}
+                  labelFormatter={(label) => `${t('labels.topic')}: ${label}`}
                 />
                 <Bar dataKey="negative_ratio" fill="#EF4444" />
               </BarChart>
@@ -439,22 +463,22 @@ export default function Home() {
         {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">尖峰时刻</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">{t('stats.peakMoment')}</h3>
             <p className="text-2xl font-bold text-blue-600">{data.peak_hour?.hour_display}</p>
             {/* <p className="text-sm text-gray-600">{data.peak_hour?.call_count} calls ({data.peak_hour?.percentage}%)</p> */}
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">总通话数</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">{t('stats.totalCalls')}</h3>
             <p className="text-2xl font-bold text-gray-800">{data.statistics.total_calls.toLocaleString()}</p>
             <p className="text-sm text-gray-600">{data.statistics.date_range}</p>
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">每日活跃通话时间范围</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">{t('stats.activeHours')}</h3>
             <p className="text-2xl font-bold text-green-600">{data.statistics.total_active_hours}</p>
             {/* <p className="text-sm text-gray-600">out of 24 hours</p> */}
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">平均每小时通话数</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">{t('stats.avgPerHour')}</h3>
             <p className="text-2xl font-bold text-purple-600">{data.statistics.average_calls_per_hour}</p>
             {/* <p className="text-sm text-gray-600">calls per hour</p> */}
           </div>
@@ -462,8 +486,7 @@ export default function Home() {
 
         {/* 24-Hour Timeline Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">24-Hour Call Distribution</h2> */}
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">通话量分布</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('charts.callDistribution')}</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={completeHourlyData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
@@ -472,10 +495,10 @@ export default function Home() {
                   dataKey="hour_label"
                   interval={1}
                 />
-                <YAxis label={{ value: '通话数', angle: -90, position: 'insideLeft' }} />
+                <YAxis label={{ value: t('labels.callCount'), angle: -90, position: 'insideLeft' }} />
                 <Tooltip 
-                  formatter={(value) => [value, '通话数']}
-                  labelFormatter={(label) => `时段: ${label}`}
+                  formatter={(value) => [value, t('labels.callCount')]}
+                  labelFormatter={(label) => `${t('labels.timeRange')}: ${label}`}
                 />
                 <Line 
                   type="monotone" 
@@ -491,8 +514,7 @@ export default function Home() {
 
         {/* Top Peak Hours Bar Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Top 10 Busiest Hours</h2> */}
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">通话高峰时段</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('charts.peakHours')}</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={topPeakHours} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -504,10 +526,10 @@ export default function Home() {
                   height={80}
                   interval={0}
                 />
-                <YAxis label={{ value: '通话数', angle: -90, position: 'insideLeft' }} />
+                <YAxis label={{ value: t('labels.callCount'), angle: -90, position: 'insideLeft' }} />
                 <Tooltip 
-                  formatter={(value) => [value, '通话数']}
-                  labelFormatter={(label) => `时段: ${label}`}
+                  formatter={(value) => [value, t('labels.callCount')]}
+                  labelFormatter={(label) => `${t('labels.timeRange')}: ${label}`}
                 />
                 <Bar dataKey="call_count" fill="#8B5CF6" />
               </BarChart>
@@ -517,8 +539,7 @@ export default function Home() {
 
         {/* Percentage Distribution Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          {/* <h2 className="text-lg font-semibold text-gray-800 mb-4">Call Distribution by Percentage</h2> */}
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">通话分布</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('charts.callDistributionPercentage')}</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={completeHourlyData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -528,12 +549,12 @@ export default function Home() {
                   interval={1}
                 />
                 <YAxis 
-                  label={{ value: '比例', angle: -90, position: 'insideLeft' }}
+                  label={{ value: t('labels.percentage'), angle: -90, position: 'insideLeft' }}
                   tickFormatter={(value) => `${value}%`}
                 />
                 <Tooltip 
-                  formatter={(value) => [`${value}%`, '比例']}
-                  labelFormatter={(label) => `时段: ${label}`}
+                  formatter={(value) => [`${value}%`, t('labels.percentage')]}
+                  labelFormatter={(label) => `${t('labels.timeRange')}: ${label}`}
                 />
                 <Bar dataKey="percentage" fill="#10B981" />
               </BarChart>
@@ -551,7 +572,7 @@ export default function Home() {
     const growthData = data.growing_topics.map(topic => ({
       ...topic,
       growth_ratio_numeric: topic.growth_ratio === 'new' ? 10 : topic.growth_ratio,
-      growth_display: topic.growth_ratio === 'new' ? '新话题' : `${topic.growth_ratio}x`
+      growth_display: topic.growth_ratio === 'new' ? t('labels.newTopic') : `${topic.growth_ratio}x`
     }));
 
     // Prepare monthly trend data for line chart
@@ -574,17 +595,17 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             {/* <h3 className="text-sm font-medium text-gray-500 mb-2">Current Month</h3> */}
-            <h3 className="text-sm font-medium text-gray-500 mb-2">当前月份</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">{t('stats.currentMonth')}</h3>
             <p className="text-2xl font-bold text-gray-800">{data.current_month}</p>
             {/* <p className="text-sm text-gray-600">{data.current_month_calls} calls</p> */}
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">历史记录分析月份数</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">{t('stats.historicalMonths')}</h3>
             <p className="text-2xl font-bold text-gray-800">{data.historical_months}</p>
             {/* <p className="text-sm text-gray-600">months analyzed</p> */}
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-medium text-gray-500 mb-2">快速增长话题数</h3>
+            <h3 className="text-sm font-medium text-gray-500 mb-2">{t('stats.growingTopics')}</h3>
             <p className="text-2xl font-bold text-green-600">{data.growing_topics.length}</p>
             {/* <p className="text-sm text-gray-600">topics trending up</p> */}
           </div>
@@ -592,7 +613,7 @@ export default function Home() {
 
         {/* Growth Ratio Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">话题增长率</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('charts.growthRate')}</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={growthData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -605,15 +626,15 @@ export default function Home() {
                   interval={0}
                 />
                 <YAxis 
-                  label={{ value: '增长率', angle: -90, position: 'insideLeft' }}
+                  label={{ value: t('labels.growthRate'), angle: -90, position: 'insideLeft' }}
                   domain={[0, 'dataMax']}
                 />
                 <Tooltip 
                 formatter={(value) => [
                   growthData.find(item => item.growth_ratio_numeric === value)?.growth_display || value,
-                  '增长率'
+                  t('labels.growthRate')
                 ]}
-                labelFormatter={(label) => `话题: ${label}`}
+                labelFormatter={(label) => `${t('labels.topic')}: ${label}`}
               />
                 <Bar dataKey="growth_ratio_numeric" fill="#10B981" />
               </BarChart>
@@ -623,7 +644,7 @@ export default function Home() {
 
         {/* Monthly Trends Line Chart */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">每月话题增长趋势</h2>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('charts.monthlyTrends')}</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={trendChartData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -635,7 +656,7 @@ export default function Home() {
                   height={80}
                 />
                 <YAxis 
-                  label={{ value: '频率', angle: -90, position: 'insideLeft' }}
+                  label={{ value: t('labels.frequency'), angle: -90, position: 'insideLeft' }}
                   tickFormatter={(value) => `${(value * 100).toFixed(1)}%`}
                 />
                 <Tooltip 
@@ -643,7 +664,7 @@ export default function Home() {
                     typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : `${value}%`, 
                     name
                   ]}
-                  labelFormatter={(label) => `Month: ${label}`}
+                  labelFormatter={(label) => `${t('labels.month')}: ${label}`}
                 />
                 <Legend />
                 {topTopics.map((topic, index) => (
@@ -667,7 +688,7 @@ export default function Home() {
 
   const DataTable = ({ data, columns }: { data: any[], columns: TableColumn[] }) => (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">详细资料</h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-4">{t('ui.detailedData')}</h2>
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -706,9 +727,9 @@ export default function Home() {
     // Check if this is peak call hours data
     if (responseData.peak_hour) {
       const columns: TableColumn[] = [
-        { key: 'hour_range', title: '时间范围' },
-        { key: 'call_count', title: '通话数量' },
-        { key: 'percentage', title: '比例', render: (value: any) => `${value}%` }
+        { key: 'hour_range', title: t('labels.timeRange') },
+        { key: 'call_count', title: t('labels.callCount') },
+        { key: 'percentage', title: t('labels.percentage'), render: (value: any) => `${value}%` }
       ];
       return (
         <div className="space-y-6">
@@ -721,26 +742,26 @@ export default function Home() {
     // Check if this is growing topics data
     if (responseData && responseData.growing_topics && responseData.monthly_topic_trends) {
       const columns: TableColumn[] = [
-        { key: 'topic', title: '话题' },
+        { key: 'topic', title: t('labels.topic') },
         { 
           key: 'current_frequency', 
-          title: '当前频率', 
+          title: t('labels.currentFreq'), 
           render: (value: any) => typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : `${value}%`
         },
-        { key: 'current_count', title: '当前数量' },
+        { key: 'current_count', title: t('labels.currentCount') },
         { 
           key: 'historical_avg_frequency', 
-          title: '历史平均频率', 
+          title: t('labels.historicalAvg'), 
           render: (value: any) => typeof value === 'number' ? `${(value * 100).toFixed(2)}%` : `${value}%`
         },
         { 
           key: 'growth_ratio', 
-          title: '增长率', 
-          render: (value: any) => value === 'new' ? '新话题' : `${value}x` 
+          title: t('labels.growthRate'), 
+          render: (value: any) => value === 'new' ? t('labels.newTopic') : `${value}x` 
         },
         { 
           key: 'is_growing', 
-          title: '是否增长', 
+          title: t('labels.isGrowing'), 
           render: (value: any) => value ? '✅' : '❌' 
         }
       ];
@@ -759,13 +780,13 @@ export default function Home() {
       if ('avg_duration' in firstItem) {
         // Topic duration insight
         const columns: TableColumn[] = [
-          { key: 'topic', title: '话题' },
+          { key: 'topic', title: t('labels.topic') },
           { 
             key: 'avg_duration', 
-            title: '平均时长（秒）', 
+            title: t('labels.avgDuration'), 
             render: (value: any) => typeof value === 'number' ? value.toFixed(1) : value 
           },
-          { key: 'count', title: '通话数量' }
+          { key: 'count', title: t('labels.callCount') }
         ];
         return (
           <div className="space-y-6">
@@ -776,14 +797,14 @@ export default function Home() {
       } else if ('positive' in firstItem) {
         // Sentiment distribution
         const columns: TableColumn[] = [
-          { key: 'topic', title: '话题' },
-          { key: 'positive', title: '正面' },
-          { key: 'neutral', title: '中性' },
-          { key: 'negative', title: '负面' },
-          { key: 'total', title: '总计' },
+          { key: 'topic', title: t('labels.topic') },
+          { key: 'positive', title: t('labels.positive') },
+          { key: 'neutral', title: t('labels.neutral') },
+          { key: 'negative', title: t('labels.negative') },
+          { key: 'total', title: t('labels.total') },
           { 
             key: 'negative_ratio', 
-            title: '负面情绪占比', 
+            title: t('labels.negativeRatio'), 
             render: (value: any) => typeof value === 'number' ? `${(value * 100).toFixed(1)}%` : `${value}%`
           }
         ];
@@ -796,8 +817,8 @@ export default function Home() {
       } else if ('count' in firstItem) {
         // Topic count
         const columns: TableColumn[] = [
-          { key: 'topic', title: '话题' },
-          { key: 'count', title: '通话数量' }
+          { key: 'topic', title: t('labels.topic') },
+          { key: 'count', title: t('labels.callCount') }
         ];
         return (
           <div className="space-y-6">
@@ -810,7 +831,7 @@ export default function Home() {
    
     return (
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-800 mb-3">Raw Data</h2>
+        <h2 className="text-lg font-semibold text-gray-800 mb-3">{t('ui.rawData')}</h2>
         <pre className="bg-gray-50 p-4 rounded-lg overflow-auto text-sm">
           {JSON.stringify(responseData, null, 2)}
         </pre>
@@ -831,9 +852,10 @@ export default function Home() {
               <span className="text-white font-bold text-lg">V</span>
             </button>
             <div>
-              <h1 className="text-xl font-semibold text-gray-800">{getChineseTranslation(currentQuestion)}</h1>
-              {/* <p className="text-sm text-gray-500">Analyzing your customer service data...</p> */}
-              <p className="text-sm text-gray-500">正在分析您的客服数据</p>
+              <h1 className="text-xl font-semibold text-gray-800">
+                  {currentQuestionKey ? t(`questions.${currentQuestionKey}`) : currentQuestion}
+              </h1>
+              <p className="text-sm text-gray-500">{t('ui.analyzingData')}</p>
             </div>
           </div>
         </header>
@@ -844,8 +866,7 @@ export default function Home() {
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                {/* <span className="ml-4 text-lg text-gray-600">Analyzing data...</span> */}
-                <span className="ml-4 text-lg text-gray-600">分析中</span>
+                <span className="ml-4 text-lg text-gray-600">{t('ui.analyzing')}</span>
               </div>
             ) : (
               <>
@@ -872,8 +893,7 @@ export default function Home() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              // placeholder="Ask another question..."
-              placeholder="我还能帮您什么？"
+              placeholder={t('ui.whatCanHelp')}
               className="w-full px-6 py-3 pr-16 bg-gray-50 rounded-2xl border border-gray-200 hover:bg-white hover:shadow-md transition-all duration-300 focus:outline-none focus:ring-0 placeholder-gray-400"
               onKeyDown={handleKeyDown}
             />
@@ -894,10 +914,10 @@ export default function Home() {
             {predefinedQuestions.map((question, index) => (
               <button
                 key={index}
-                onClick={() => handleChipClick(question)}
+                onClick={() => handleChipClick(question.key, question.endpoint)}
                 className="bg-gray-50 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 border border-gray-200 hover:border-blue-300 rounded-lg px-3 py-2 text-xs text-gray-600 hover:text-blue-700 transition-all duration-200 hover:shadow-sm whitespace-nowrap font-medium"
               >
-                {chineseTranslations[question]}
+                {t(`questions.${question.key}`)}
               </button>
             ))}
           </div>
@@ -908,6 +928,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col items-center justify-center p-6">
+      <LanguageSwitcher />
+
       {/* Logo */}
       <div className="flex items-center justify-center space-x-3 mb-6">
         <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
@@ -918,12 +940,10 @@ export default function Home() {
 
       {/* Title */}
       <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-2 text-center">
-        {/* What would you like to know? */}
-        想了解什么呢？
+        {t('welcome.title')}
       </h1>
       <p className="text-lg text-gray-600 max-w-2xl mx-auto text-center mb-8">
-        {/* Ask me anything about your customer service call data and get instant insights */}
-        欢迎向我提问任何关于客户服务通话数据的问题，立即获取洞察分析
+      {t('welcome.subtitle')}
       </p>
 
       {/* Search Input */}
@@ -932,8 +952,7 @@ export default function Home() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          // placeholder="Ask Voxi..."
-          placeholder="问问 Voxi..."
+          placeholder={t('ui.askVoxi')}
           className="w-full px-6 py-4 pr-16 text-lg bg-white rounded-2xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow duration-300 focus:outline-none focus:ring-0 placeholder-gray-400"
           onKeyDown={handleKeyDown}
         />
@@ -951,17 +970,16 @@ export default function Home() {
       {/* Predefined Questions */}
       <div className="w-full max-w-4xl mx-auto text-center">
         <h2 className="text-xl font-semibold text-gray-700 mb-4">
-          {/* Try asking these questions: */}
-          大家常问的问题
+          {t('ui.commonQuestions')}
         </h2>
         <div className="flex flex-wrap gap-3 justify-center">
           {predefinedQuestions.map((question, index) => (
             <button
               key={index}
-              onClick={() => handleChipClick(question)}
+              onClick={() => handleChipClick(question.key, question.endpoint)}
               className="bg-white hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 border border-gray-200 hover:border-blue-300 rounded-xl px-4 py-3 text-sm text-gray-700 hover:text-blue-700 transition-all duration-200 hover:shadow-md hover:scale-105 whitespace-nowrap font-medium"
             >
-              {chineseTranslations[question]}
+              {t(`questions.${question.key}`)}
             </button>
           ))}
         </div>
